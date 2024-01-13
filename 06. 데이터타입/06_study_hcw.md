@@ -131,7 +131,7 @@ foo = null;
 var score = 100;
 ```
 
-![6-1](/assets/6-1.jpg)
+![6-1](/assets/hcw/6-1.jpg)
 
 ### 2. 데이터 타입에 의한 값의 해석
 

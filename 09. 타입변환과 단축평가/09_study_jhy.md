@@ -42,8 +42,8 @@
 
 #### + 는 문자열로, 나머지 연산자는 다 숫자로 타입변환
 
-![Alt text](image-jhy.png)
-![Alt text](image-1-jhy.png)
+![Alt text](/assets/jhy/image-jhy.png)
+![Alt text](/assets/jhy/image-1-jhy.png)
 
 ### 9.3 ✏️명시적 타입 변환
 
@@ -65,7 +65,7 @@ Boolean
 
 ### 9.4 ✏️단축 평가
 
-![Alt text](image-2-jhy.png)
+![Alt text](/assets/jhy/image-2-jhy.png)
 
 #### 객체를 가리키기를 기대한 변수가 null or undefined 가 아닌지 확인하고 프로퍼티를 참조할 때
 
