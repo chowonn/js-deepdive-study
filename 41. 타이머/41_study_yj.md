@@ -67,6 +67,131 @@ const timeoutId = setInterval(() => {
 - 타이머가 만료될 때마다 첫 번째 인수로 전달받은 콜백 함수가 반복 호출, 이는 타이머가 취소될 때까지 계속
 - setInterval 함수의 콜백 함수는 두 번째 인수로 전달받은 시간이 경과할 때마다 반복 실행되도록 호출 스케쥴링됨
 
+## 41.3 디바운스와 스로틀
+
+짧은 시간 간격으로 연속해서 발생하는 이벤트에 바인딩한 이벤트 핸들러는 과도하게 호출되어 성능에 문제를 일으킬 수 있음
+
+디바운스와 스로틀은 짧은 시간 간격으로 연속해서 발생하는 이벤트를 그룹화해서 과도한 이벤트 핸들러의 호출을 방지하는 프로그래밍 기법
+
+### 41.3.1 디바운스
+
+디바운스는 짧은 시간 간격으로 이벤트가 연속해서 발생하면 이벤트 핸들러를 호출하지 않다가 일정 시간이 경과한 이후에 이벤트 핸들러가 한 번만 호출되도록 함
+
+```html
+<!DOCTYPE html>
+<html>
+  <body>
+    <input type="text" />
+    <div class="msg"></div>
+    <script>
+      const $input = document.querySelector("input");
+      const $msg = document.querySelector(".msg");
+
+      const debounce = (callback, delay) => {
+        let timerId;
+        // debounce 함수는 timerId를 기억하는 클로저를 반환한다.
+        return (...args) => {
+          // delay가 경과하기 이전에 이벤트가 발생하면 이전 타이머를 취소하고
+          // 새로운 타이머를 재설정한다.
+          // 따라서 delay보다 짧은 간격으로 이벤트가 발생하면 callback은 호출되지 않는다.
+          if (timerId) clearTimeout(timerId);
+          timerId = setTimeout(callback, delay, ...args);
+        };
+      };
+
+      // debounce 함수가 반환하는 클로저가 이벤트 핸들러로 등록된다.
+      // 300ms보다 짧은 간격으로 input 이벤트가 발생하면 debounce 함수의 콜백 함수는
+      // 호출되지 않다가 300ms 동안 input 이벤트가 더 이상 발생하면 한 번만 호출된다.
+      $input.oninput = debounce((e) => {
+        $msg.textContent = e.target.value;
+      }, 300);
+    </script>
+  </body>
+</html>
+```
+
+- input의 이벤트 핸들러에서 사용자가 입력 필드에 입력한 값으로 Ajax 요청과 같은 무거운 처리를 수행한다면 사용자가 아직 입력을 완료하지 않았어도 Ajax 요청이 전송
+- 사용자가 입력을 완료했을 때 한 번만 Ajax 요청을 전송하는 것이 바람직
+- 사용자가 입력을 완료했는지 여부는 정확히 알 수 없으므로 일정 시간 동안 텍스트 입력 필드에 값을 입력하지 않으면 입력이 완료된 것으로 간주
+- ![image](https://github.com/jin62413/js-deepdive-study/assets/71061884/882671f8-e0a2-43c6-a025-e855c4824993)
+
+### 41.3.2 스로틀
+
+스로틀은 짧은 시간 간격으로 이벤트가 연속해서 발생하더라도 일정 시간 간격으로 이벤트 핸들러가 최대 한 번만 호출되도록 함
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .container {
+        width: 300px;
+        height: 300px;
+        background-color: rebeccapurple;
+        overflow: scroll;
+      }
+
+      .content {
+        width: 300px;
+        height: 1000vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="content"></div>
+    </div>
+    <div>
+      일반 이벤트 핸들러가 scroll 이벤트를 처리한 횟수:
+      <span class="normal-count">0</span>
+    </div>
+    <div>
+      스로틀 이벤트 핸들러가 scroll 이벤트를 처리한 횟수:
+      <span class="throttle-count">0</span>
+    </div>
+
+    <script>
+      const $container = document.querySelector(".container");
+      const $normalCount = document.querySelector(".normal-count");
+      const $throttleCount = document.querySelector(".throttle-count");
+
+      const throttle = (callback, delay) => {
+        let timerId;
+        // throttle 함수는 timerId를 기억하는 클로저를 반환한다.
+        return (...args) => {
+          // delay가 경과하기 이전에 이벤트가 발생하면 아무것도 하지 않다가
+          // delay가 경과했을 때 이벤트가 발생하면 새로운 타이머를 재설정한다.
+          // 따라서 delay 간격으로 callback이 호출된다.
+          if (timerId) return;
+          timerId = setTimeout(() => {
+            callback(...args);
+            timerId = null;
+          }, delay);
+        };
+      };
+
+      let normalCount = 0;
+      $container.addEventListener("scroll", () => {
+        $normalCount.textContent = ++normalCount;
+      });
+
+      let throttleCount = 0;
+      // throttle 함수가 반환하는 클로저가 이벤트 핸들러로 등록된다.
+      $container.addEventListener(
+        "scroll",
+        throttle(() => {
+          $throttleCount.textContent = ++throttleCount;
+        }, 100)
+      );
+    </script>
+  </body>
+</html>
+```
+
+- scroll 이벤트는 사용자가 스크롤할 때 짧은 시간 간격으로 연속해서 발생하기 때문에 이벤트 핸들러 호출이 과도하게 발생
+- 이를 방지하기 위해 throttle 함수는 이벤트를 그룹화해서 일정 시간 단위로 이벤트 핸들러가 호출되도록 호출 주기를 만듦
+- ![image](https://github.com/jin62413/js-deepdive-study/assets/71061884/ed716069-f003-45db-b378-6637e93675fa)
+
 ## 🤔궁금한 점
 
 ## 📌중요한 점
